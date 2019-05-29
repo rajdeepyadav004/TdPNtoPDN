@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+import tkinter as tk
 
 
 class tdpn:
@@ -6,6 +7,7 @@ class tdpn:
 		self.places=[]
 		self.transitions=[]
 		self.arcs=[]
+		self.coordinates=dict()
 		self.initMarking=dict()
 		##arcs are of the format (type, place, transition, condition)
 	
@@ -17,6 +19,9 @@ class tdpn:
 
 	def addArcs(self, listOfArcs):
 		self.arcs = self.arcs + listOfArcs
+
+	def addCoordinates(self, dictOfCoordinates):
+		self.coordinates = {**self.coordinates, **dictOfCoordinates}
 
 	#assume marking is a dict with items as list of ages 
 	def addInitMarking(self, marking):
@@ -55,6 +60,41 @@ class tdpn:
 		self.addPlaces([(place.find("text").text)  for place in places])
 		self.addTrans([(trans.find("text").text) for trans in transitions])
 		self.addArcs([(arc.attrib["orientation"], IDtoPlace[arc.find("placeend").attrib["idref"]], IDtoTrans[arc.find("transend").attrib["idref"]], arc.find("annot/text").text) for arc in arcs])
+
+	def display(self):
+		master = tk.Tk()
+		canvas = tk.Canvas(master, width=1500, height=1000)
+		canvas.pack()
+		for place in self.places:
+			canvas.create_oval(self.coordinates[place][0]+30, self.coordinates[place][1]+20, self.coordinates[place][0]-30, self.coordinates[place][1]-20)
+			canvas.create_text(self.coordinates[place][0],self.coordinates[place][1], text=place)
+
+		for trans in self.transitions:
+			canvas.create_rectangle(self.coordinates[trans][0]+30, self.coordinates[trans][1]+20, self.coordinates[trans][0]-30, self.coordinates[trans][1]-20)
+			canvas.create_text(self.coordinates[trans][0],self.coordinates[trans][1], text=trans)
+
+		for arc in self.arcs:
+			x1,y1,x2,y2 = 0,0,0,0
+			if arc[0]=='ptot':
+				x1,y1 = self.coordinates[arc[1]]
+				x2,y2 = self.coordinates[arc[2]]
+			else:
+				x1,y1 = self.coordinates[arc[2]]
+				x2,y2 = self.coordinates[arc[1]]
+
+			if x1+60<x2:
+				canvas.create_line(x1+30,y1,x2-30,y2,arrow=tk.LAST)
+			elif x1>x2+60 and y1<y2:
+				canvas.create_line(x1-30,y1,x2+30,y2,arrow=tk.LAST)
+			elif y1>y2:
+				canvas.create_line(x1,y1-30,x2,y2_30,arrow=tk.LAST)
+			else:
+				canvas.create_line(x1,y1+30,x2,y2-30,arrow=tk.LAST)
+
+			canvas.create_text((x1+x2)/2, (y1+y2)/2, text=arc[3])
+
+
+		tk.mainloop()
 
 
 class pdn:
@@ -112,12 +152,21 @@ class pdn:
 		return val
 
 
-net = pdn()
 
-net.addPlaces(["p1", "p2"])
-net.addDatums(["d1", "d2", "d3", "d4"])
+if __name__ == '__main__':	
+	net = tdpn()
+	net.addPlaces(["p1", "p2"])
+	net.addTrans(["tr1"])
+	coordinates = {"p1":(750,350), "p2":(750,650), "tr1":(750,500)}
+	arcs = [("ptot", "p1", "tr1", "[2,5]"),("ttop", "p2", "tr1", "[3,7]")]
+	net.addArcs(arcs)
+	net.addCoordinates(coordinates)
+	net.display()
 
-rules = []
-rules = rules + [(["p1", "p2"], ["d1", "d2", "d3"], {"p1":{"d1": 1, "d2": 1, "d3":0}, "p2": {"d1": 0, "d2": 1, "d3":1}}, {"p1": {"d1": 1, "d2": 0, "d3":1}, "p2": {"d1": 0, "d2": 0, "d3":1}})]
-net.addTrans(rules)
-print(net)
+	# net.addDatums(["d1", "d2", "d3", "d4"])
+	# rules = []
+	# rules = rules + [(["p1", "p2"], ["d1", "d2", "d3"], {"p1":{"d1": 1, "d2": 1, "d3":0}, "p2": {"d1": 0, "d2": 1, "d3":1}}, {"p1": {"d1": 1, "d2": 0, "d3":1}, "p2": {"d1": 0, "d2": 0, "d3":1}})]
+	# net.addTrans(rules)
+	# print(net)
+
+
