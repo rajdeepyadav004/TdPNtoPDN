@@ -20,24 +20,22 @@ class TestTransle(unittest.TestCase):
 
 		temp = str(dataNet).lower().split("\n")
 
-		temp = filter(lambda x: ("data" in x),temp)
+		temp = list(filter(lambda x: ("data" in x),temp))
 
-		for line in temp:
-			line = filter(lambda x: ("int" in x) or ("disc" in x) or ("low" in x) or ("high" in x), line)
-			for x in line:
+		for line in temp[1:]:
+			seq=[]
+			for x in line.split():
 				if ("int" in x):
-					x = 1
+					seq.append(1)
 				elif ("disc" in x):
-					x = 2
+					seq.append(2)
 				elif ("low" in x):
-					x = 3
-				elif ("" in x):
-					x = 4
-
-			line = [x[0] for x in groupby(line)]
-			seq = str([1,2,3]).strip("[]")
-			line = str(line).strip("[]")
-			self.assertIn(line,seq)
+					seq.append(3)
+				elif ("high" in x):
+					seq.append(4)
+			line = [x[0] for x in groupby(seq)]
+			order = [[1],[2],[3],[4],[1,2],[1,3],[1,4],[2,3],[2,4],[3,4],[1,2,3],[1,2,4],[1,3,4],[2,3,4],[1,2,3,4]]
+			self.assertIn(line,order)
 
 ### END OF CLASS ###
 
