@@ -44,6 +44,7 @@ def divide(trans):
 ### END OF HELPER FUNCTION "divide()" ####
 
 
+
 def sortArcs(timedNet):
 	# helper function to sort timedNet arcs
 	for item in timedNet.transitions:
@@ -55,6 +56,7 @@ def sortArcs(timedNet):
 
 	return timedNet
 ### END OF HELPER FUNCTION ###
+
 
 
 def modifyTimedNet(timedNet):
@@ -80,27 +82,15 @@ def modifyTimedNet(timedNet):
 		newTransitions.append((trans[0], inArc, outArc))
 	### END OF FOR LOOP ###
 
-	timedNet.places.extend(["storage", "infinity"])
-	timedNet.transitions = newTransitions + [("producer", [], [("storage", "singular",[0],None)])]
-	producerArcs = []
-
-	for place in timedNet.initMarking.keys():
-		producerArcs.append((place, "singular", [0], None))
-		timedNet.initMarking[place] = []
-	### END OF FOR LOOP ###
-
-
 	#intermediate step 2
 	timedNet.transitions = [item for sublist in list(map(lambda x: (list(map(lambda y: (x[0]+"."+str(y[0]+1),y[1],x[2]),enumerate(divide(x))))) , timedNet.transitions)) for item in sublist]
-	timedNet.transitions.append(("massProducer", [("infinity", None, None, None)], producerArcs))	
-	timedNet.initMarking["infinity"] = [1]
 
 
 	##ASERTION###
-	file = open("tests/first.test","r")
-	contents = file.read()
-	file.close()
-	assert str(timedNet)+"\n" == contents, '''Error in duplication'''
+	# file = open("tests/first.test","r")
+	# contents = file.read()
+	# file.close()
+	# assert str(timedNet)+"\n" == contents, '''Error in duplication'''
 
 
 	#Sorting
@@ -110,17 +100,28 @@ def modifyTimedNet(timedNet):
 ### END OF HELPER FUNCTION "modifyTimedNet" ###
 
 
+
 def timeElapseTransitions(timedNet,maximal):
 	# Time elapse transitions 
 	#el0
-	inpMat = {"disc": {"el0.disc": 1, "el0.X":0, "el0.Y":0}, "high": {"el0.disc": 0, "el0.X":1, "el0.Y":0}, "time0": {"el0.disc": 0, "el0.X":0, "el0.Y":0}}
-	outMat = {"disc": {"el0.disc": 0, "el0.X":0, "el0.Y":0}, "high": {"el0.disc": 0, "el0.X":0, "el0.Y":1}, "time0": {"el0.disc": 1, "el0.X":0, "el0.Y":0}}
-	transitions = [(["disc","high","time0"], ["el0.disc","el0.X","el0.Y"], inpMat, outMat)]
+	inpMat = {"disc": {"el0.disc": 1}, "time0": {"el0.disc": 0}}
+	outMat = {"disc": {"el0.disc": 0}, "time0": {"el0.disc": 1}}
+	transitions = [(["disc"], ["el0.disc"], inpMat, outMat)]
 
 	#el1
-	inpMat = {"int":{"el1.disc": 0, "el1.X": 0, "el1.Y": 1}, "time0":{"el1.disc": 1, "el1.X": 0, "el1.Y": 0}, "time1":{"el1.disc": 0, "el1.X": 0, "el1.Y": 0}}
-	outMat = {"int":{"el1.disc": 0, "el1.X": 1, "el1.Y": 0}, "time0":{"el1.disc": 0, "el1.X": 0, "el1.Y": 0}, "time1":{"el1.disc": 1, "el1.X": 0, "el1.Y": 0}}
-	transitions.append((["time0","int","time1"],["el1.X","el1.Y","el1.disc"],inpMat, outMat))
+	inpMat = {
+		"int":{"el1.newInt":0,"el1.oldInt":1,"el1.disc":0,"el1.oldHigh":0,"el1.newHigh":0}, 
+		"high":{"el1.newInt":0,"el1.oldInt":0,"el1.disc":0,"el1.oldHigh":1,"el1.newHigh":0},
+		"time0":{"el1.newInt":0,"el1.oldInt":0,"el1.disc":1,"el1.oldHigh":0,"el1.newHigh":0}, 
+		"time1":{"el1.newInt":0,"el1.oldInt":0,"el1.disc":0,"el1.oldHigh":0,"el1.newHigh":0}
+	}
+	outMat = {
+		"int":{"el1.newInt":1,"el1.oldInt":0,"el1.disc":0,"el1.oldHigh":0,"el1.newHigh":0}, 
+		"high":{"el1.newInt":0,"el1.oldInt":0,"el1.disc":0,"el1.oldHigh":0,"el1.newHigh":1},
+		"time0":{"el1.newInt":0,"el1.oldInt":0,"el1.disc":0,"el1.oldHigh":0,"el1.newHigh":0}, 
+		"time1":{"el1.newInt":0,"el1.oldInt":0,"el1.disc":1,"el1.oldHigh":0,"el1.newHigh":0}
+	}
+	transitions.append((["int", "high", "time0", "time1"], ["el1.newInt","el1.oldInt","el1.disc","el1.oldHigh","el1.newHigh"],inpMat, outMat))
 
 	#el2
 	inpMat = {"disc":{"el2.disc": 0}, "time1":{"el2.disc": 1}}
@@ -132,20 +133,44 @@ def timeElapseTransitions(timedNet,maximal):
 	outMat={"time1": {"el3.disc": 0}, "time2": {"el3.disc": 1}}
 	transitions.append((["time1", "time2"], ["el3.disc"], inpMat, outMat))
 
-	#el4
+	#yetUnnamedTransition1
 	inpMat={
-		"time2":{"el4.disc": 1,"el4.X": 0, "el4.Y": 0, "el4.Z": 0},
-		"low":{"el4.disc": 0,"el4.X": 1, "el4.Y": 0, "el4.Z": 0},
-		"disc": {"el4.disc": 0,"el4.X": 0, "el4.Y": 0, "el4.Z": 0},
-		"high": {"el4.disc": 0,"el4.X": 0, "el4.Y": 0, "el4.Z": 1}
+		"low\'":{"YUNT1.low\'":0, "YUNT1.low":0, "YUNT1.high":0},
+		"low":{"YUNT1.low\'":0, "YUNT1.low":1, "YUNT1.high":0},
+		"high":{"YUNT1.low\'":0, "YUNT1.low":0, "YUNT1.high":1}
 	}
 	outMat={
-		"time2":{"el4.disc": 0,"el4.X": 0, "el4.Y": 0, "el4.Z": 0},
-		"low":{"el4.disc": 0,"el4.X": 0, "el4.Y": 1, "el4.Z": 0},
-		"disc":{"el4.disc": 1,"el4.X": 0, "el4.Y": 0, "el4.Z": 0},
-		"high":{"el4.disc": 0,"el4.X": 0, "el4.Y": 0, "el4.Z": 1}
+		"low\'":{"YUNT1.low\'":1, "YUNT1.low":0, "YUNT1.high":0},
+		"low":{"YUNT1.low\'":0, "YUNT1.low":0, "YUNT1.high":0},
+		"high":{"YUNT1.low\'":0, "YUNT1.low":0, "YUNT1.high":1}
 	}
-	transitions.append((["time2", "low", "high", "disc"], ["el4.disc", "el4.X", "el4.Y", "el4.Z"], inpMat, outMat))
+	transitions.append((["low","low\'","high"],["YUNT1.low\'","YUNT1.low","YUNT1.high"],inpMat,outMat))
+
+	#yetUnnamedTransition2
+	inpMat={
+		"low\'":{"YUNT2.low":0},
+		"low":{"YUNT2.low":1}
+	}
+	outMat={
+		"low\'":{"YUNT2.low":1},
+		"low":{"YUNT2.low":0}
+	}
+	transitions.append((["low\'", "low"],["YUNT2.low"],inpMat,outMat))
+
+	#el4
+	inpMat={
+		"time2":{"el4.disc":1, "el4.oldLow":0, "el4.newLow":0, "el4.high":0},
+		"low":{"el4.disc":0, "el4.oldLow":1, "el4.newLow":0, "el4.high":0},
+		"high": {"el4.disc":0, "el4.oldLow":0, "el4.newLow":0, "el4.high":1},
+		"disc":{"el4.disc":0, "el4.oldLow":0, "el4.newLow":0, "el4.high":0}
+	}
+	outMat={
+		"time2":{"el4.disc":0, "el4.oldLow":0, "el4.newLow":0, "el4.high":0},
+		"low":{"el4.disc":0, "el4.oldLow":0, "el4.newLow":1, "el4.high":0},
+		"high":{"el4.disc":0, "el4.oldLow":0, "el4.newLow":0, "el4.high":1},
+		"disc":{"el4.disc":1, "el4.oldLow":0, "el4.newLow":0, "el4.high":0}
+	}
+	transitions.append((["time2", "low", "high", "disc"], ["el4.disc", "el4.oldLow", "el4.newLow", "el4.high"], inpMat, outMat))
 
 	# Defining transitions tf.p.k, tf.p.max, ti.p.k for each place
 	newPlaces = []
@@ -212,6 +237,7 @@ def timeElapseTransitions(timedNet,maximal):
 
 	return transitions, newPlaces
 ### END OF HELPER FUNCTION ###
+
 
 
 def discreteTransitions(timedNet, maximal):
@@ -355,7 +381,7 @@ def translate(timedNet):
 	maximal = 2
 
 	#defining places
-	dataNet.addPlaces(["int", "low", "high", "disc", "time0", "time1", "time2"])
+	dataNet.addPlaces(["int", "low", "low\'", "high", "disc", "time0", "time1", "time2"])
 
 	## DEFINING TRANSITIONS ###
 	# time elapse
