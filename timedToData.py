@@ -41,15 +41,24 @@ def divide(trans):
 
 
 	return [list(x) for x in  product(*inArcs)]
-
 ### END OF HELPER FUNCTION "divide()" ####
 
 
+def sortArcs(timedNet):
+	# helper function to sort timedNet arcs
+	for item in timedNet.transitions:
+		arcs = item[1]
+		if arcs:
+			arcs.sort(reverse=True, key = lambda x: x[1])
+			arcs.sort(reverse=False, key = lambda x: x[2])
+	### END OF FOR LOOP ###
+
+	return timedNet
+### END OF HELPER FUNCTION ###
 
 
-def translate(timedNet):
-
-	#intermediate step 1
+def modifyTimedNet(timedNet):
+	# hepler function to modify timedNet to make it processable
 	newTransitions = []
 
 	for trans in timedNet.transitions:
@@ -95,25 +104,13 @@ def translate(timedNet):
 
 
 	#Sorting
-	for item in timedNet.transitions:
-		arcs = item[1]
-		if arcs:
-			arcs.sort(reverse=True, key = lambda x: x[1])
-			arcs.sort(reverse=False, key = lambda x: x[2])
-	### END OF FOR LOOP ###
+	timedNet = sortArcs(timedNet)
+
+	return timedNet
+### END OF HELPER FUNCTION "modifyTimedNet" ###
 
 
-	# declaring a new data net and finding maximal constant
-	dataNet = pdn()
-	maximal = 2
-
-
-	#defining places
-	newPlaces = ["int", "low", "high", "disc", "time0", "time1", "time2"]
-
-
-	## DEFINING TRANSITIONS ###
-
+def timeElapseTransitions(timedNet,maximal):
 	# Time elapse transitions 
 	#el0
 	inpMat = {"disc": {"el0.disc": 1, "el0.X":0, "el0.Y":0}, "high": {"el0.disc": 0, "el0.X":1, "el0.Y":0}, "time0": {"el0.disc": 0, "el0.X":0, "el0.Y":0}}
@@ -150,8 +147,8 @@ def translate(timedNet):
 	}
 	transitions.append((["time2", "low", "high", "disc"], ["el4.disc", "el4.X", "el4.Y", "el4.Z"], inpMat, outMat))
 
-
 	# Defining transitions tf.p.k, tf.p.max, ti.p.k for each place
+	newPlaces = []
 	for place in timedNet.places:
 
 		newPlaces = newPlaces + list(map(lambda x: place + "." + str(x), (list(range(0,maximal+1))+["inf"])))
@@ -213,9 +210,14 @@ def translate(timedNet):
 			transitions.append((["time2","low","int",place+"."+str(k),place+"."+str(k+1)],[transName+x for x in [".X",".disc",".Y"]],inpMat,outMat))
 		### END OF FOR LOOP ####
 
+	return transitions, newPlaces
+### END OF HELPER FUNCTION ###
 
+
+def discreteTransitions(timedNet, maximal):
 	## DISCRETE TRANSTIONS ###
-
+	
+	transitions = []
 	lst = []
 	for trans in timedNet.transitions:
 
@@ -336,8 +338,34 @@ def translate(timedNet):
 		### END OF FOR LOOP ###
 
 	transitions.extend(lst)
-	dataNet.addPlaces(newPlaces)
-	dataNet.addTrans(transitions)
+
+	return transitions	
+### END OF HELPER FUNCTION ###
+
+
+
+def translate(timedNet):
+	maximal = 2
+
+	#intermediate step 1
+	timedNet = modifyTimedNet(timedNet)
+
+	# declaring a new data net and finding maximal constant
+	dataNet = pdn()
+	maximal = 2
+
+	#defining places
+	dataNet.addPlaces(["int", "low", "high", "disc", "time0", "time1", "time2"])
+
+	## DEFINING TRANSITIONS ###
+	# time elapse
+	temp = timeElapseTransitions(timedNet, maximal)
+	dataNet.addTrans(temp[0])
+	dataNet.addPlaces(temp[1])
+
+	# discrete
+	dataNet.addTrans(discreteTransitions(timedNet, maximal))
+
 	return dataNet
 #### END OF FUNCTION "translate" ###
 
