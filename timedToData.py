@@ -182,57 +182,57 @@ def timeElapseTransitions(timedNet,maximal):
 		for k in range(maximal):
 			transName = "tr."+place+"."+str(k)
 			inpMat = {
-				"high":{transName+".X":0, transName+".Y":1, transName+".disc":0},
-				"time0":{transName+".X":0, transName+".Y":0, transName+".disc":1},
-				"int":{transName+".X":1, transName+".Y":0, transName+".disc":0},
-				(place+"."+str(k)):{transName+".X":1, transName+".Y":0, transName+".disc":0}
+				"high":{transName+".int":0, transName+".high":1, transName+".disc":0},
+				"time0":{transName+".int":0, transName+".high":0, transName+".disc":1},
+				"int":{transName+".int":1, transName+".high":0, transName+".disc":0},
+				(place+"."+str(k)):{transName+".int":1, transName+".high":0, transName+".disc":0}
 			}
 			outMat = {
-				"high":{transName+".X":0, transName+".Y":1, transName+".disc":0},
-				"time0":{transName+".X":0, transName+".Y":0, transName+".disc":1},
-				"int":{transName+".X":1, transName+".Y":0, transName+".disc":0},
-				(place+"."+str(k)):{transName+".X":0, transName+".Y":1, transName+".disc":0}
+				"high":{transName+".int":0, transName+".high":1, transName+".disc":0},
+				"time0":{transName+".int":0, transName+".high":0, transName+".disc":1},
+				"int":{transName+".int":1, transName+".high":0, transName+".disc":0},
+				(place+"."+str(k)):{transName+".int":0, transName+".high":1, transName+".disc":0}
 			}
 
-			transitions.append((["high","int","time0",place+"."+str(k)],[transName+x for x in [".X",".disc",".Y"]],inpMat,outMat))
+			transitions.append((["high","int","time0",place+"."+str(k)],[transName+x for x in [".int",".disc",".high"]],inpMat,outMat))
 		### END OF FOR LOOP
 
 
 		#tf.p.max
 		transName = "tf."+place+"."+str(maximal)
 		inpMat = {
-			"time0":{transName+".disc":1, transName+".X":0},
-			"int":{transName+".disc":0, transName+".X":1},
-			place+"."+str(maximal):{transName+".disc":0, transName+".X":1},
-			place+".inf":{transName+".disc":0, transName+".X":0}
+			"time0":{transName+".disc":1, transName+".int":0},
+			"int":{transName+".disc":0, transName+".int":1},
+			place+"."+str(maximal):{transName+".disc":0, transName+".int":1},
+			place+".inf":{transName+".disc":0, transName+".int":0}
 		}
 		outMat = {
-			"time0":{transName+".disc":1, transName+".X":0},
-			"int":{transName+".disc":0, transName+".X":1},
-			place+"."+str(maximal):{transName+".disc":0, transName+".X":0},
-			place+".inf":{transName+".disc":1, transName+".X":0}
+			"time0":{transName+".disc":1, transName+".int":0},
+			"int":{transName+".disc":0, transName+".int":1},
+			place+"."+str(maximal):{transName+".disc":0, transName+".int":0},
+			place+".inf":{transName+".disc":1, transName+".int":0}
 		}
-		transitions.append((["time0","int",place+"."+str(maximal), place+".inf"],[transName+x for x in [".X",".disc"]],inpMat,outMat))
+		transitions.append((["time0","int",place+"."+str(maximal), place+".inf"],[transName+x for x in [".int",".disc"]],inpMat,outMat))
 
 
 		#ti.p.k
 		for k in range(maximal):
 			transName = "ti."+place+str(k)
 			inpMat = {
-				"time2":{transName+".X": 0, transName+".Y": 0,transName+".disc": 1},
-				"low":	{transName+".X": 0, transName+".Y": 1,transName+".disc": 0},
-				"int": {transName+".X": 1, transName+".Y": 0,transName+".disc": 0},
-				place+"."+str(k): {transName+".X": 0, transName+".Y": 1,transName+".disc": 0},
-				place+"."+str(k+1): {transName+".X": 0, transName+".Y": 0,transName+".disc": 0}
+				"time2":{transName+".int": 0, transName+".low": 0,transName+".disc": 1},
+				"low\'":	{transName+".int": 0, transName+".low": 1,transName+".disc": 0},
+				"int": {transName+".int": 1, transName+".low": 0,transName+".disc": 0},
+				place+"."+str(k): {transName+".int": 0, transName+".low": 1,transName+".disc": 0},
+				place+"."+str(k+1): {transName+".int": 0, transName+".low": 0,transName+".disc": 0}
 			}
 			outMat = {
-				"time2":{transName+".X": 0, transName+".Y": 0,transName+".disc": 1},
-				"low":	{transName+".X": 0, transName+".Y": 1,transName+".disc": 0},
-				"int": {transName+".X": 1, transName+".Y": 0,transName+".disc": 0},
-				place+"."+str(k): {transName+".X": 0, transName+".Y": 0,transName+".disc": 0},
-				place+"."+str(k+1): {transName+".X": 1, transName+".Y": 0,transName+".disc": 0}
+				"time2":{transName+".int": 0, transName+".low": 0,transName+".disc": 1},
+				"low\'":	{transName+".int": 0, transName+".low": 1,transName+".disc": 0},
+				"int": {transName+".int": 1, transName+".low": 0,transName+".disc": 0},
+				place+"."+str(k): {transName+".int": 0, transName+".low": 0,transName+".disc": 0},
+				place+"."+str(k+1): {transName+".int": 1, transName+".low": 0,transName+".disc": 0}
 			}
-			transitions.append((["time2","low","int",place+"."+str(k),place+"."+str(k+1)],[transName+x for x in [".X",".disc",".Y"]],inpMat,outMat))
+			transitions.append((["time2","low\'","int",place+"."+str(k),place+"."+str(k+1)],[transName+x for x in [".int",".disc",".low"]],inpMat,outMat))
 		### END OF FOR LOOP ####
 
 	return transitions, newPlaces
