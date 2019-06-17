@@ -65,7 +65,7 @@ class tdpn:
 		ID: (WORD | "None")
 		TYPE: ("ptot" | "ttop")
 		INTERVAL: ((LEFTBRACKET NUMBER ["," NUMBER] RIGHTBRACKET) | "None")
-		MYSTRING: (WORD NUMBER*)
+		MYSTRING: (WORD NUMBER)
 		LEFTBRACKET: "["|"("
 		RIGHTBRACKET: ")"|"]"
 
