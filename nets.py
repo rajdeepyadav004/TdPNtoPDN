@@ -1,10 +1,28 @@
 import xml.etree.ElementTree as ET
 import tkinter as tk
+from lark import Lark
 
 
+def mystring(tree):
+	res = ""
+	for val in tree.children:
+		res += val
+	return res
+
+
+def getMarking(tree):
+	lst = tree.children
+	key = None
+	res = dict()
+	for x in lst:
+		if repr(x)[6]=="M":
+			key = str(x)
+			res[key] = []
+		else:
+			res[key].append(int(str(x)))
+	return res
 
 class tdpn:
-
 
 	def __init__(self):
 		self.places=[]
@@ -33,12 +51,93 @@ class tdpn:
 		self.finalMarking = marking
 
 
+	def readFromFile(self, filename):
+		grammar = '''
+		start: places transitions "initial marking:" marking "final marking:" marking
+
+		places: "places: " MYSTRING*
+		transitions: "transitions: " (MYSTRING arc* "END")+
+
+		marking: (MYSTRING ":" NUMBER*)*
+		 
+		arc: WORD TYPE INTERVAL ID
+
+		ID: (WORD | "None")
+		TYPE: ("ptot" | "ttop")
+		INTERVAL: ((LEFTBRACKET NUMBER ["," NUMBER] RIGHTBRACKET) | "None")
+		MYSTRING: (WORD NUMBER*)
+		LEFTBRACKET: "["|"("
+		RIGHTBRACKET: ")"|"]"
+
+		 %import common.WORD
+		 %import common.LETTER
+		 %import common.SIGNED_NUMBER -> NUMBER
+		 %import common.WS
+		 %ignore WS
+		'''
+
+
+		file = open(filename, "r")
+		content = file.read()
+		file.close()
+
+		parser = Lark(grammar)
+		tree= parser.parse(content)
+
+		place, transition, initMark, finalMark = tree.children
+		places = [str(x) for x in place.children]
+
+
+		transitions = [] 
+
+
+		name=None
+		inArc = []
+		outArc = []
+		for x in transition.children:
+			if(repr(x)[:5]=="Token"):
+				transitions.append((name,inArc,outArc))
+				name = str(x)
+				inArc = []
+				outArc = []
+			else:
+				temp = list(map(str,x.children))
+				f = lambda x: inArc if "ptot"==x else outArc
+				g = lambda x: None if x=="None" else x
+
+				if temp[2]=="None":
+					f(temp[1]).append((temp[0],None,None,g(temp[3])))
+
+				elif not "," in temp[2]:
+					f(temp[1]).append((temp[0],"singular",[int(temp[2][1:-1])],g(temp[3])))
+				elif temp[2][0]=="(" and temp[2][-1]==")":
+					f(temp[1]).append((temp[0],"open",(list(map(int,temp[2][1:-1].split(",")))), g(temp[3])))
+				elif temp[2][0]=="(" and temp[2][-1]=="]":
+					f(temp[1]).append((temp[0],"leftOpen",(list(map(int,temp[2][1:-1].split(",")))), g(temp[3])))
+				elif temp[2][0]=="[" and temp[2][-1]==")":
+					f(temp[1]).append((temp[0],"rightOpen",(list(map(int,temp[2][1:-1].split(",")))), g(temp[3])))
+				elif temp[2][0]=="[" and temp[2][-1]=="]":
+					f(temp[1]).append((temp[0],"closed",(list(map(int,temp[2][1:-1].split(",")))), g(temp[3])))
+
+		transitions.append((name,inArc,outArc))
+
+		if not transitions[0][0]:
+			transitions.pop(0)
+
+		self.addPlaces(places)
+		self.addTrans(transitions)
+		self.addInitMarking(getMarking(initMark))
+		self.addFinalMarking(getMarking(finalMark))
+
+
+
 	def __str__(self):
 
 		#print places
 		val = "places: " + " ".join(self.places)+"\n"
 
 		#print Transitions
+		val = val + "transitions: "
 		for trans in self.transitions:
 
 			val += "name: "+ trans[0] + "\n"
@@ -62,6 +161,12 @@ class tdpn:
 		for place in self.initMarking.keys():
 			count +=1
 			val = val + "\t"+ str(count) + ". " + place + ": " + " ".join([str(x) for x in self.initMarking[place]]) + "\n"
+
+		val = val + "Final Markings: " + "\n"
+		count = 0
+		for place in self.finalMarking.keys():
+			count +=1
+			val = val + "\t"+ str(count) + ". " + place + ": " + " ".join([str(x) for x in self.finalMarking[place]]) + "\n"
 
 		return val
 
@@ -153,9 +258,5 @@ class pdn:
 
 if __name__ == '__main__':	
 	timedNet = tdpn()
-	timedNet.places = ["p","q","r","s"]
-	timedNet.data = ["X"]
-	timedNet.transitions = [("tr1", [("p", "closed", [1,2], None), ("q", "singular", [1], "X")], [("r", None, None, "X"), ("s", "closed", [1,2], None)])]
-	timedNet.initMarking = {"p":[0], "q": [1]}
-	timedNet.finalMarking = {"r":[2]}
+	timedNet.readFromFile("test1.tpn")
 	print(timedNet)

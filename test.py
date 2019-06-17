@@ -11,11 +11,7 @@ class TestTransle(unittest.TestCase):
 		'''
 
 		timedNet = tdpn()
-		timedNet.places = ["p","q","r","s"]
-		timedNet.data = ["X"]
-		timedNet.transitions = [("tr1", [("p", "open", [1,2], None), ("q", "singular", [1], "X")], [("r", None, None, "X"), ("s", "open", [1,2], None)])]
-		timedNet.initMarking = {"p":[0], "q": [1]}
-		timedNet.finalMarking = {"r":[2]}
+		timedNet.readFromFile("test1.tpn")
 		dataNet = translate(timedNet)
 
 		temp = str(dataNet).lower().split("\n")
