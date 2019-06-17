@@ -1,6 +1,7 @@
 from nets import tdpn, pdn
 import sys
 from itertools import product, permutations
+import copy
 
 DEBUG=False;
 
@@ -61,26 +62,26 @@ def sortArcs(timedNet):
 
 def modifyTimedNet(timedNet):
 	# hepler function to modify timedNet to make it processable
-	newTransitions = []
+	# newTransitions = []
 
-	for trans in timedNet.transitions:
+	# for trans in timedNet.transitions:
 
-		inArc, outArc = trans[1],[]
-		counter = 1
+	# 	inArc, outArc = trans[1],[]
+	# 	counter = 1
 
-		for arc in trans[2]:
+	# 	for arc in trans[2]:
 
-			if arc[1] and arc[1]!="singular":
-				var = (trans[0] + ".X" + str(counter))
-				inArc.append(("storage", arc[1], arc[2],var))
-				outArc.append((arc[0], None, None, var))
-				timedNet.data.append(var)
+	# 		if arc[1] and arc[1]!="singular":
+	# 			var = (trans[0] + ".X" + str(counter))
+	# 			inArc.append(("storage", arc[1], arc[2],var))
+	# 			outArc.append((arc[0], None, None, var))
+	# 			timedNet.data.append(var)
 
-			else:
-				outArc.append(arc)
+	# 		else:
+	# 			outArc.append(arc)
 
-		newTransitions.append((trans[0], inArc, outArc))
-	### END OF FOR LOOP ###
+	# 	newTransitions.append((trans[0], inArc, outArc))
+	# ## END OF FOR LOOP ###
 
 	#intermediate step 2
 	timedNet.transitions = [item for sublist in list(map(lambda x: (list(map(lambda y: (x[0]+"."+str(y[0]+1),y[1],x[2]),enumerate(divide(x))))) , timedNet.transitions)) for item in sublist]
@@ -370,18 +371,26 @@ def discreteTransitions(timedNet, maximal):
 
 
 
+
+
+
 def translate(timedNet):
-	maximal = 2
+
+	maximal = 0
+	for trans in timedNet.transitions:
+		for arc in trans[1]+trans[2]:
+			if arc[2]:
+				maximal = max(maximal, arc[2][-1])
 
 	#intermediate step 1
 	timedNet = modifyTimedNet(timedNet)
 
 	# declaring a new data net and finding maximal constant
 	dataNet = pdn()
-	maximal = 2
+	
 
 	#defining places
-	dataNet.addPlaces(["int", "low", "low\'", "high", "disc", "time0", "time1", "time2"])
+	dataNet.addPlaces(["int", "low", "low\'", "high", "disc", "time0", "time1", "time2", "success"])
 
 	## DEFINING TRANSITIONS ###
 	# time elapse
@@ -391,6 +400,49 @@ def translate(timedNet):
 
 	# discrete
 	dataNet.addTrans(discreteTransitions(timedNet, maximal))
+
+	id1, id2, id3 = 10, 20, 30
+
+
+	initMarking = dict()
+
+	initMarking["int"] = [id1]
+	initMarking["disc"] = [id2]
+	initMarking["low"] = [id3]
+	initMarking["high"] = [id3]
+
+	for place in timedNet.initMarking.keys():
+		for token in timedNet.initMarking[place]:
+			if token<=maximal:
+				initMarking.setdefault(place+"."+str(token), [])
+				initMarking[place+"."+str(token)].append(id1)
+			else:
+				initMarking.setdefault(place+".inf", [])
+				initMarking[place+".inf"].append(id1)
+
+	tempPlaces = []
+	inpMat = dict()
+	outMat = dict()
+
+	for place in dataNet.places:
+		inpMat[place] = {"int": 0}
+		outMat[place] = {"int": 0}
+
+	outMat["success"]["int"] = 1
+
+	for place in timedNet.finalMarking.keys():
+		for token in timedNet.finalMarking[place]:
+			if token<=maximal:
+				tempPlaces.append(place+"."+str(token))
+				inpMat[place+"."+str(token)]["int"]+=1
+			else:
+				tempPlaces.append(places+".inf")
+				inpMat[place+".inf"]["int"]+=1
+
+	dataNet.addTrans([(tempPlaces, ["int"], inpMat, outMat)])
+
+	dataNet.addInitMarking(initMarking)
+	dataNet.addFinalMarking({"success": [id1]})
 
 	return dataNet
 #### END OF FUNCTION "translate" ###
@@ -404,8 +456,17 @@ def main(argv):
 	timedNet.transitions = [("tr1", [("p", "open", [1,2], None), ("q", "singular", [1], "X")], [("r", None, None, "X"), ("s", "open", [1,2], None)])]
 	timedNet.initMarking = {"p":[0], "q": [1]}
 	timedNet.finalMarking = {"r":[2]}
-	d = translate(timedNet)
+
+	t2 = tdpn()
+	t2.readFromFile("test1.tpn")
+	t2.data = ["X"]
+	
+	d = translate(t2)
 	print(d)
+	# print(str(t2))
+
+
+	# print(d2)
 
 
 

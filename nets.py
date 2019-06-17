@@ -250,6 +250,13 @@ class pdn:
 			count +=1
 			val = val + "\t"+ str(count) + ". " + place + ": " + " ".join([str(x) for x in self.initMarking[place]]) + "\n"
 
+		val = val + "Final Markings: " + "\n"
+		count = 0
+		for place in self.finalMarking.keys():
+			count +=1
+			val = val + "\t"+ str(count) + ". " + place + ": " + " ".join([str(x) for x in self.finalMarking[place]]) + "\n"
+
+
 		return val
 
 ### END OF CLASS ###
