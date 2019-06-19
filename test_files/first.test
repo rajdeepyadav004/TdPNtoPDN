@@ -1,0 +1,27 @@
+places: p q r s storage infinity
+name: tr1.1
+in arcs: 
+	p interval (1,2) None
+	q singlular 1 X
+	storage interval (1,2) tr1.X1
+out arcs: 
+	r None None X
+	s None None tr1.X1
+
+name: producer.1
+in arcs: 
+out arcs: 
+	storage singular [0] None
+
+name: massProducer
+in arcs: 
+	infinity None None None
+out arcs: 
+	p singular [0] None
+	q singular [0] None
+
+Initial Markings: 
+	1. p: 
+	2. q: 
+	3. infinity: 1
+
