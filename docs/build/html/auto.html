@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Auto Documentation &#8212; Petri Net Translation 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to Petri Net Translation’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-nets">
+<span id="auto-documentation"></span><h1>Auto Documentation<a class="headerlink" href="#module-nets" title="Permalink to this headline">¶</a></h1>
+<p>Contains Classes to store the nets</p>
+<dl class="function">
+<dt id="nets.getMarking">
+<code class="sig-prename descclassname">nets.</code><code class="sig-name descname">getMarking</code><span class="sig-paren">(</span><em class="sig-param">tree</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nets.html#getMarking"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.getMarking" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to extracting marking from parse tree</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tree</strong> (<em>lark.tree.Tree</em>) – A children of tree produced by parsing the .tpn file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a dictionary with places as keys, and list of token ages as value</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>,<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="nets.pdn">
+<em class="property">class </em><code class="sig-prename descclassname">nets.</code><code class="sig-name descname">pdn</code><a class="reference internal" href="_modules/nets.html#pdn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.pdn" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to represent petri data nets</p>
+<dl class="method">
+<dt id="nets.pdn.addFinalMarking">
+<code class="sig-name descname">addFinalMarking</code><span class="sig-paren">(</span><em class="sig-param">marking</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nets.html#pdn.addFinalMarking"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.pdn.addFinalMarking" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add final marking to the net.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>marking</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><em>typing.Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>,</em><em>double</em><em>]</em><em>]</em><em>]</em>) – a dictionary with places as keys and token data as values</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nets.pdn.addInitMarking">
+<code class="sig-name descname">addInitMarking</code><span class="sig-paren">(</span><em class="sig-param">marking</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nets.html#pdn.addInitMarking"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.pdn.addInitMarking" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add initial marking to the net.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>marking</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><em>typing.Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>,</em><em>double</em><em>]</em><em>]</em><em>]</em>) – a dictionary with places as keys and token data as values</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nets.pdn.addPlaces">
+<code class="sig-name descname">addPlaces</code><span class="sig-paren">(</span><em class="sig-param">listOfPlaces</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nets.html#pdn.addPlaces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.pdn.addPlaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add places to the net</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>listOFPlaces</strong> – adds a list of places to the net</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nets.pdn.addTrans">
+<code class="sig-name descname">addTrans</code><span class="sig-paren">(</span><em class="sig-param">listOfTrans</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nets.html#pdn.addTrans"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.pdn.addTrans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add transitions values to the transitions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Note</dt>
+<dd class="field-odd"><p>each transition is a tuple containing list of places involved, list of data values in increasing order, and input and output matrices
+Each matrix is a 2D dictionary, with place as first key, datum as second key and number of tokens with identity equal to datum coming from place as value.</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><p><strong>listOfTransitions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>]</em><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>]</em><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>]</em><em>]</em><em>]</em><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>]</em><em>]</em><em>]</em><em>]</em>) – adds a list of transitions to the net</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nets.pdn.adddata">
+<code class="sig-name descname">adddata</code><span class="sig-paren">(</span><em class="sig-param">listOfdata</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nets.html#pdn.adddata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.pdn.adddata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add data values to the transitions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>listOfData</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>]</em>) – adds a list of data values to the net</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nets.tdpn">
+<em class="property">class </em><code class="sig-prename descclassname">nets.</code><code class="sig-name descname">tdpn</code><a class="reference internal" href="_modules/nets.html#tdpn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.tdpn" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to represent timed data nets</p>
+<dl class="method">
+<dt id="nets.tdpn.addFinalMarking">
+<code class="sig-name descname">addFinalMarking</code><span class="sig-paren">(</span><em class="sig-param">marking</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nets.html#tdpn.addFinalMarking"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.tdpn.addFinalMarking" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add Final marking to the net</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>marking</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>]</em><em>]</em>) – a dictionary with places as keys and list of teken ages as values</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nets.tdpn.addInitMarking">
+<code class="sig-name descname">addInitMarking</code><span class="sig-paren">(</span><em class="sig-param">marking</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nets.html#tdpn.addInitMarking"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.tdpn.addInitMarking" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add initial marking to the net</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>marking</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>]</em><em>]</em>) – a dictionary with places as keys and list of teken ages as values</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nets.tdpn.addPlaces">
+<code class="sig-name descname">addPlaces</code><span class="sig-paren">(</span><em class="sig-param">listOfPlaces</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nets.html#tdpn.addPlaces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.tdpn.addPlaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>adds list of places to the net</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>listOfPlaces</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>]</em>) – list of places to be added in the net</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nets.tdpn.addTrans">
+<code class="sig-name descname">addTrans</code><span class="sig-paren">(</span><em class="sig-param">listOfTrans</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nets.html#tdpn.addTrans"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.tdpn.addTrans" title="Permalink to this definition">¶</a></dt>
+<dd><p>adds list of transitions to the net</p>
+<p>A transition is a tuple containnig name, list of input arcs, list of output arcs
+An arc is a tuple containing place, type(singular or interval), endpoints of interval, and identifier</p>
+<p>Note: the endpoints of interval is a list with single item if type is singular, and a list with two items if type is interval
+:type listOfTrans: list[tuple(str,list[str,str,list[typing.Union[int,double]],str],list[tuple(str,list[str,str,list[typing.Union[int,double]],str]]
+:param listOfTrans: list of Transitions to be added in the net</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nets.tdpn.readFromFile">
+<code class="sig-name descname">readFromFile</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nets.html#tdpn.readFromFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nets.tdpn.readFromFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates a tdpn class from a .tpn file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – the location of .tpn file relavtive to current directory, or the absolute path of the file</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-timedToData"></span><dl class="function">
+<dt id="timedToData.divide">
+<code class="sig-prename descclassname">timedToData.</code><code class="sig-name descname">divide</code><span class="sig-paren">(</span><em class="sig-param">trans</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timedToData.html#divide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timedToData.divide" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper function to create multiple transitions with one transition</p>
+<p>each arc in the result is either singular or open interval of length 1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to Petri Net Translation’s documentation!</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Rajdeep Yadav.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/auto.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

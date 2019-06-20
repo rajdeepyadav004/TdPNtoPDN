@@ -1,0 +1,442 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>nets &#8212; Petri Net Translation 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for nets</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Contains Classes to store the nets</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">lark</span> <span class="k">import</span> <span class="n">Lark</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+
+
+
+<div class="viewcode-block" id="getMarking"><a class="viewcode-back" href="../classes.html#nets.getMarking">[docs]</a><span class="k">def</span> <span class="nf">getMarking</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;A function to extracting marking from parse tree</span>
+
+<span class="sd">	:param tree: A children of tree produced by parsing the .tpn file</span>
+<span class="sd">	:type tree: lark.tree.Tree</span>
+<span class="sd">	:returns: a dictionary with places as keys, and list of token ages as value</span>
+<span class="sd">	:rtype: dict[str,list[str]</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">lst</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">children</span>
+	<span class="n">key</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">res</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+		<span class="k">if</span> <span class="nb">repr</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">6</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;M&quot;</span><span class="p">:</span>
+			<span class="n">key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+			<span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+	<span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="tdpn"><a class="viewcode-back" href="../classes.html#nets.tdpn">[docs]</a><span class="k">class</span> <span class="nc">tdpn</span><span class="p">:</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	A class to represent timed data nets</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Creates variable associated with the class</span>
+
+<span class="sd">		Instanstiate places, data, transitions, and markings</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">places</span><span class="o">=</span><span class="p">[]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">=</span><span class="p">[]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="o">=</span><span class="p">[]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">initMarking</span><span class="o">=</span><span class="nb">dict</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">finalMarking</span><span class="o">=</span><span class="nb">dict</span><span class="p">()</span>
+		<span class="c1">##transitions are tuples (name, list of arcs coming, list of arc going)</span>
+		<span class="c1">## each arc is a tuple (place, type, constraint, identifier)</span>
+
+
+<div class="viewcode-block" id="tdpn.addPlaces"><a class="viewcode-back" href="../classes.html#nets.tdpn.addPlaces">[docs]</a>	<span class="k">def</span> <span class="nf">addPlaces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listOfPlaces</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		adds list of places to the net</span>
+
+<span class="sd">		:type listOfPlaces: list[str]</span>
+<span class="sd">		:param listOfPlaces: list of places to be added in the net</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">places</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">places</span> <span class="o">+</span> <span class="n">listOfPlaces</span></div>
+
+	
+<div class="viewcode-block" id="tdpn.addTrans"><a class="viewcode-back" href="../classes.html#nets.tdpn.addTrans">[docs]</a>	<span class="k">def</span> <span class="nf">addTrans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listOfTrans</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		adds list of transitions to the net</span>
+
+<span class="sd">		A transition is a tuple containnig name, list of input arcs, list of output arcs</span>
+<span class="sd">		An arc is a tuple containing place, type(singular or interval), endpoints of interval, and identifier</span>
+<span class="sd">		</span>
+<span class="sd">		Note: the endpoints of interval is a list with single item if type is singular, and a list with two items if type is interval</span>
+<span class="sd">		:type listOfTrans: list[tuple[str,list[tuple[str,str,list[typing.Union[int,double]],str]],list[tuple(str,list[tuple[str,str,list[typing.Union[int,double]],str]]]]</span>
+<span class="sd">		:param listOfTrans: list of Transitions to be added in the net</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">transitions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span> <span class="o">+</span> <span class="n">listOfTrans</span></div>
+
+
+<div class="viewcode-block" id="tdpn.addInitMarking"><a class="viewcode-back" href="../classes.html#nets.tdpn.addInitMarking">[docs]</a>	<span class="k">def</span> <span class="nf">addInitMarking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marking</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Add initial marking to the net</span>
+
+<span class="sd">		:type marking: dict[str,list[int]]</span>
+<span class="sd">		:param marking: a dictionary with places as keys and list of teken ages as values</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">initMarking</span> <span class="o">=</span> <span class="n">marking</span></div>
+
+
+<div class="viewcode-block" id="tdpn.addFinalMarking"><a class="viewcode-back" href="../classes.html#nets.tdpn.addFinalMarking">[docs]</a>	<span class="k">def</span> <span class="nf">addFinalMarking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marking</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Add Final marking to the net</span>
+
+<span class="sd">		:type marking: dict[str,list[int]]</span>
+<span class="sd">		:param marking: a dictionary with places as keys and list of teken ages as values</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">finalMarking</span> <span class="o">=</span> <span class="n">marking</span></div>
+
+
+<div class="viewcode-block" id="tdpn.readFromFile"><a class="viewcode-back" href="../classes.html#nets.tdpn.readFromFile">[docs]</a>	<span class="k">def</span> <span class="nf">readFromFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		creates a tdpn class from a .tpn file</span>
+
+<span class="sd">		:param filename: the location of .tpn file relavtive to current directory, or the absolute path of the file</span>
+<span class="sd">		:type filename: str</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="n">grammar</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">		start: places transitions &quot;initial marking:&quot; marking &quot;final marking:&quot; marking</span>
+
+<span class="s1">		places: &quot;places: &quot; MYSTRING*</span>
+<span class="s1">		transitions: &quot;transitions: &quot; (MYSTRING arc* &quot;END&quot;)+</span>
+
+<span class="s1">		marking: (MYSTRING &quot;:&quot; NUMBER*)*</span>
+<span class="s1">		 </span>
+<span class="s1">		arc: WORD TYPE INTERVAL ID</span>
+
+<span class="s1">		ID: (WORD | &quot;None&quot;)</span>
+<span class="s1">		TYPE: (&quot;ptot&quot; | &quot;ttop&quot;)</span>
+<span class="s1">		INTERVAL: ((LEFTBRACKET NUMBER [&quot;,&quot; NUMBER] RIGHTBRACKET) | &quot;None&quot;)</span>
+<span class="s1">		MYSTRING: (LETTER [NUMBER])+</span>
+<span class="s1">		LEFTBRACKET: &quot;[&quot;|&quot;(&quot;</span>
+<span class="s1">		RIGHTBRACKET: &quot;)&quot;|&quot;]&quot;</span>
+
+<span class="s1">		 </span><span class="si">%i</span><span class="s1">mport common.WORD</span>
+<span class="s1">		 </span><span class="si">%i</span><span class="s1">mport common.LETTER</span>
+<span class="s1">		 </span><span class="si">%i</span><span class="s1">mport common.SIGNED_NUMBER -&gt; NUMBER</span>
+<span class="s1">		 </span><span class="si">%i</span><span class="s1">mport common.WS</span>
+<span class="s1">		 </span><span class="si">%i</span><span class="s1">gnore WS</span>
+<span class="s1">		&#39;&#39;&#39;</span>
+
+
+		<span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+		<span class="n">content</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+		<span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+		<span class="n">parser</span> <span class="o">=</span> <span class="n">Lark</span><span class="p">(</span><span class="n">grammar</span><span class="p">)</span>
+		<span class="n">tree</span><span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+
+		<span class="n">place</span><span class="p">,</span> <span class="n">transition</span><span class="p">,</span> <span class="n">initMark</span><span class="p">,</span> <span class="n">finalMark</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">children</span>
+		<span class="n">places</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">place</span><span class="o">.</span><span class="n">children</span><span class="p">]</span>
+
+
+		<span class="n">transitions</span> <span class="o">=</span> <span class="p">[]</span> 
+
+
+		<span class="n">name</span><span class="o">=</span><span class="kc">None</span>
+		<span class="n">inArc</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">outArc</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">transition</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+			<span class="k">if</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">x</span><span class="p">)[:</span><span class="mi">5</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;Token&quot;</span><span class="p">):</span>
+				<span class="n">transitions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span><span class="n">inArc</span><span class="p">,</span><span class="n">outArc</span><span class="p">))</span>
+				<span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+				<span class="n">inArc</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">outArc</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">temp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="n">x</span><span class="o">.</span><span class="n">children</span><span class="p">))</span>
+				<span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">inArc</span> <span class="k">if</span> <span class="s2">&quot;ptot&quot;</span><span class="o">==</span><span class="n">x</span> <span class="k">else</span> <span class="n">outArc</span>
+				<span class="n">g</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">x</span><span class="o">==</span><span class="s2">&quot;None&quot;</span> <span class="k">else</span> <span class="n">x</span>
+
+				<span class="k">if</span> <span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;None&quot;</span><span class="p">:</span>
+					<span class="n">f</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="n">g</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">3</span><span class="p">])))</span>
+
+				<span class="k">elif</span> <span class="ow">not</span> <span class="s2">&quot;,&quot;</span> <span class="ow">in</span> <span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+					<span class="n">f</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s2">&quot;singular&quot;</span><span class="p">,[</span><span class="nb">int</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])],</span><span class="n">g</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">3</span><span class="p">])))</span>
+				<span class="k">elif</span> <span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;(&quot;</span> <span class="ow">and</span> <span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;)&quot;</span><span class="p">:</span>
+					<span class="n">f</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s2">&quot;open&quot;</span><span class="p">,(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)))),</span> <span class="n">g</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">3</span><span class="p">])))</span>
+				<span class="k">elif</span> <span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;(&quot;</span> <span class="ow">and</span> <span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;]&quot;</span><span class="p">:</span>
+					<span class="n">f</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s2">&quot;leftOpen&quot;</span><span class="p">,(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)))),</span> <span class="n">g</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">3</span><span class="p">])))</span>
+				<span class="k">elif</span> <span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;[&quot;</span> <span class="ow">and</span> <span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;)&quot;</span><span class="p">:</span>
+					<span class="n">f</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s2">&quot;rightOpen&quot;</span><span class="p">,(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)))),</span> <span class="n">g</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">3</span><span class="p">])))</span>
+				<span class="k">elif</span> <span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;[&quot;</span> <span class="ow">and</span> <span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;]&quot;</span><span class="p">:</span>
+					<span class="n">f</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s2">&quot;closed&quot;</span><span class="p">,(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)))),</span> <span class="n">g</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">3</span><span class="p">])))</span>
+
+		<span class="n">transitions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span><span class="n">inArc</span><span class="p">,</span><span class="n">outArc</span><span class="p">))</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">transitions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+			<span class="n">transitions</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">addPlaces</span><span class="p">(</span><span class="n">places</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">addTrans</span><span class="p">(</span><span class="n">transitions</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">addInitMarking</span><span class="p">(</span><span class="n">getMarking</span><span class="p">(</span><span class="n">initMark</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">addFinalMarking</span><span class="p">(</span><span class="n">getMarking</span><span class="p">(</span><span class="n">finalMark</span><span class="p">))</span></div>
+
+
+	<span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+		<span class="c1">#print places</span>
+		<span class="n">val</span> <span class="o">=</span> <span class="s2">&quot;places: &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">places</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+		<span class="c1">#print Transitions</span>
+		<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;transitions: &quot;</span>
+		<span class="k">for</span> <span class="n">trans</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">:</span>
+
+			<span class="n">val</span> <span class="o">+=</span> <span class="s2">&quot;name: &quot;</span><span class="o">+</span> <span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+			<span class="n">val</span> <span class="o">+=</span> <span class="s2">&quot;in arcs: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+			<span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">trans</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+				<span class="k">if</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;interval&quot;</span><span class="p">:</span>
+					<span class="n">val</span><span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,(</span><span class="n">arc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span><span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="p">)))</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">val</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">arc</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+			<span class="n">val</span> <span class="o">+=</span> <span class="s2">&quot;out arcs: </span><span class="se">\n</span><span class="s2">&quot;</span>
+			<span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">trans</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+				<span class="n">val</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">arc</span><span class="p">))</span>  <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+			<span class="n">val</span><span class="o">+=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+		<span class="c1">#print markings</span>
+		<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;Initial Markings: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+		<span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">initMarking</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+			<span class="n">count</span> <span class="o">+=</span><span class="mi">1</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;. &quot;</span> <span class="o">+</span> <span class="n">place</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">initMarking</span><span class="p">[</span><span class="n">place</span><span class="p">]])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+		<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;Final Markings: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+		<span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">finalMarking</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+			<span class="n">count</span> <span class="o">+=</span><span class="mi">1</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;. &quot;</span> <span class="o">+</span> <span class="n">place</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">finalMarking</span><span class="p">[</span><span class="n">place</span><span class="p">]])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+		<span class="k">return</span> <span class="n">val</span>
+
+
+	<span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span></div>
+	
+<span class="c1">### END OF CLASS ###		</span>
+
+
+
+<div class="viewcode-block" id="pdn"><a class="viewcode-back" href="../classes.html#nets.pdn">[docs]</a><span class="k">class</span> <span class="nc">pdn</span><span class="p">:</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	A class to represent petri data nets</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Creates variable associated with the class</span>
+
+<span class="sd">		Instanstiate places, data, transitions, and markings</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">places</span><span class="o">=</span><span class="p">[]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">=</span><span class="p">[]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="o">=</span><span class="p">[]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">initMarking</span><span class="o">=</span><span class="nb">dict</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">finalMarking</span><span class="o">=</span><span class="nb">dict</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="pdn.addPlaces"><a class="viewcode-back" href="../classes.html#nets.pdn.addPlaces">[docs]</a>	<span class="k">def</span> <span class="nf">addPlaces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listOfPlaces</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Add places to the net</span>
+
+<span class="sd">		:param listOFPlaces: adds a list of places to the net</span>
+<span class="sd">		:type listOfPlaces: list[str]</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">places</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">places</span> <span class="o">+</span> <span class="n">listOfPlaces</span></div>
+
+
+<div class="viewcode-block" id="pdn.adddata"><a class="viewcode-back" href="../classes.html#nets.pdn.adddata">[docs]</a>	<span class="k">def</span> <span class="nf">adddata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listOfdata</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Add data values to the transitions</span>
+
+<span class="sd">		:param listOfData: adds a list of data values to the net</span>
+<span class="sd">		:type listOfData: list[str] </span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">listOfdata</span></div>
+
+	
+<div class="viewcode-block" id="pdn.addTrans"><a class="viewcode-back" href="../classes.html#nets.pdn.addTrans">[docs]</a>	<span class="k">def</span> <span class="nf">addTrans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listOfTrans</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Add transitions values to the transitions</span>
+
+<span class="sd">		:Note: each transition is a tuple containing list of places involved, list of data values in increasing order, and input and output matrices</span>
+<span class="sd">			Each matrix is a 2D dictionary, with place as first key, datum as second key and number of tokens with identity equal to datum coming from place as value.</span>
+<span class="sd">		:param listOfTransitions: adds a list of transitions to the net</span>
+<span class="sd">		:type listOfTransitions: list[tuple[list[str],list[str],dict[str,dict[str,int]]],dict[str,dict[str,int]]]] </span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">transitions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span> <span class="o">+</span> <span class="n">listOfTrans</span></div>
+
+
+	<span class="c1">#assume marking is a dict with items as list of ages </span>
+<div class="viewcode-block" id="pdn.addInitMarking"><a class="viewcode-back" href="../classes.html#nets.pdn.addInitMarking">[docs]</a>	<span class="k">def</span> <span class="nf">addInitMarking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marking</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Add initial marking to the net. </span>
+
+<span class="sd">		:type marking: dict[str,list[typing.Union[int,double]]]</span>
+<span class="sd">		:param marking: a dictionary with places as keys and token data as values</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">initMarking</span> <span class="o">=</span> <span class="n">marking</span></div>
+
+
+<div class="viewcode-block" id="pdn.addFinalMarking"><a class="viewcode-back" href="../classes.html#nets.pdn.addFinalMarking">[docs]</a>	<span class="k">def</span> <span class="nf">addFinalMarking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">marking</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Add final marking to the net. </span>
+
+<span class="sd">		:type marking: dict[str,list[typing.Union[int,double]]]</span>
+<span class="sd">		:param marking: a dictionary with places as keys and token data as values</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">finalMarking</span> <span class="o">=</span> <span class="n">marking</span></div>
+
+
+	<span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+		<span class="c1">#print places</span>
+		<span class="n">val</span> <span class="o">=</span> <span class="s2">&quot;places: &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">places</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+		<span class="c1">#print data</span>
+		<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;data: &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+		<span class="c1">#print transtions</span>
+		<span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">:</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;Rule: </span><span class="se">\n</span><span class="s2">&quot;</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">places: &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rule</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> 
+			<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">data: &quot;</span>
+			<span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">rule</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+				<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="si">{:12}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datum</span><span class="p">)</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+			<span class="n">inputMat</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+			<span class="n">outputMat</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">input: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+			<span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="n">rule</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+				<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">    &quot;</span> <span class="o">+</span><span class="s2">&quot;</span><span class="si">{:12}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">place</span><span class="p">)</span>
+				<span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">rule</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+					<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">{:12}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">inputMat</span><span class="p">[</span><span class="n">place</span><span class="p">][</span><span class="n">datum</span><span class="p">]))</span>
+				<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+			<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">output: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+			<span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="n">rule</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+				<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">    &quot;</span><span class="o">+</span> <span class="s2">&quot;</span><span class="si">{:12}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">place</span><span class="p">)</span>
+				<span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">rule</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+					<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">{:12}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">outputMat</span><span class="p">[</span><span class="n">place</span><span class="p">][</span><span class="n">datum</span><span class="p">]))</span>
+				<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+		<span class="c1">#print marking</span>
+		<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;Initial Markings: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+		<span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">initMarking</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+			<span class="n">count</span> <span class="o">+=</span><span class="mi">1</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;. &quot;</span> <span class="o">+</span> <span class="n">place</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">initMarking</span><span class="p">[</span><span class="n">place</span><span class="p">]])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+		<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;Final Markings: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+		<span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">finalMarking</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+			<span class="n">count</span> <span class="o">+=</span><span class="mi">1</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;. &quot;</span> <span class="o">+</span> <span class="n">place</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">finalMarking</span><span class="p">[</span><span class="n">place</span><span class="p">]])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+
+		<span class="k">return</span> <span class="n">val</span></div>
+
+<span class="c1">### END OF CLASS ###</span>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>	
+	<span class="n">timedNet</span> <span class="o">=</span> <span class="n">tdpn</span><span class="p">()</span>
+	<span class="n">timedNet</span><span class="o">.</span><span class="n">readFromFile</span><span class="p">(</span><span class="s2">&quot;test1.tpn&quot;</span><span class="p">)</span>
+	<span class="nb">print</span><span class="p">(</span><span class="n">timedNet</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Rajdeep Yadav.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

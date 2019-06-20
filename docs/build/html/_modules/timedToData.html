@@ -1,0 +1,575 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>timedToData &#8212; Petri Net Translation 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for timedToData</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">nets</span> <span class="k">import</span> <span class="n">tdpn</span><span class="p">,</span> <span class="n">pdn</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">product</span><span class="p">,</span> <span class="n">permutations</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="n">DEBUG</span><span class="o">=</span><span class="kc">False</span><span class="p">;</span>
+
+
+<div class="viewcode-block" id="divide"><a class="viewcode-back" href="../translation.html#timedToData.divide">[docs]</a><span class="k">def</span> <span class="nf">divide</span><span class="p">(</span><span class="n">trans</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	helper function to help create multiple transitions with one transition</span>
+
+<span class="sd">	each arc in the result is either singular or open interval of length 1</span>
+
+<span class="sd">	:param trans: a timed transtion</span>
+<span class="sd">	:type trans: tuple[str,list[tuple[str,str,list[typing.Union[int,double]],str]],list[tuple(str,list[tuple[str,str,list[typing.Union[int,double]],str]]]</span>
+<span class="sd">	:return: a list of arcs</span>
+<span class="sd">	:rtype: tuple[str,str,list[typing.Union[int,double]]</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">inArcs</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">trans</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+
+		<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">if</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;singular&quot;</span><span class="p">:</span>
+
+			<span class="n">endpoints</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+			<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">endpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">endpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">arc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;singular&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">arc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;interval&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+
+			<span class="k">if</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;closed&quot;</span><span class="p">:</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">arc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;singular&quot;</span><span class="p">,</span> <span class="n">endpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+
+			<span class="k">elif</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;leftOpen&quot;</span><span class="p">:</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">arc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;singular&quot;</span><span class="p">,</span> <span class="n">endpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+			<span class="k">elif</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;open&quot;</span><span class="p">:</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+		<span class="k">elif</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;singular&quot;</span><span class="p">:</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="p">[(</span><span class="n">arc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;singlular&quot;</span><span class="p">,</span> <span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">])]</span>
+
+
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">arc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span>
+		<span class="n">inArcs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+
+
+	<span class="k">return</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>  <span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">inArcs</span><span class="p">)]</span></div>
+<span class="c1">### END OF HELPER FUNCTION &quot;divide()&quot; ####</span>
+
+
+
+<div class="viewcode-block" id="sortArcs"><a class="viewcode-back" href="../translation.html#timedToData.sortArcs">[docs]</a><span class="k">def</span> <span class="nf">sortArcs</span><span class="p">(</span><span class="n">timedNet</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Helper function to sort the arcs in every transition on the basis of their intervals</span>
+
+<span class="sd">	:param timedNet: a tdpn structure</span>
+<span class="sd">	:type timedNet: tdpn</span>
+<span class="sd">	:return: a tdpn with sorted arcs in all transitions</span>
+<span class="sd">	:rtype: tdpn</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="c1"># helper function to sort timedNet arcs</span>
+	<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">timedNet</span><span class="o">.</span><span class="n">transitions</span><span class="p">:</span>
+		<span class="n">arcs</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+		<span class="k">if</span> <span class="n">arcs</span><span class="p">:</span>
+			<span class="n">arcs</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+			<span class="n">arcs</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+	<span class="c1">### END OF FOR LOOP ###</span>
+
+	<span class="k">return</span> <span class="n">timedNet</span></div>
+<span class="c1">### END OF HELPER FUNCTION ###</span>
+
+
+
+<div class="viewcode-block" id="modifyTimedNet"><a class="viewcode-back" href="../translation.html#timedToData.modifyTimedNet">[docs]</a><span class="k">def</span> <span class="nf">modifyTimedNet</span><span class="p">(</span><span class="n">timedNet</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	helper function to change the timedNet and make it suitable for translation</span>
+
+<span class="sd">	It will create multiple transitions from one transition by dividing each arc</span>
+<span class="sd">	into separate arcs which are either singular, or represent an open interval</span>
+<span class="sd">	of length 1.</span>
+
+<span class="sd">	Also, the arcs in each transition will be sorted</span>
+
+<span class="sd">	:param timedNet: a tdpn structure</span>
+<span class="sd">	:type timedNet: tdpn</span>
+<span class="sd">	:return: a modified timedNet</span>
+<span class="sd">	:rtype: tdpn</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="c1"># hepler function to modify timedNet to make it processable	#intermediate step 2</span>
+	<span class="n">timedNet</span><span class="o">.</span><span class="n">transitions</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">divide</span><span class="p">(</span><span class="n">x</span><span class="p">)))))</span> <span class="p">,</span> <span class="n">timedNet</span><span class="o">.</span><span class="n">transitions</span><span class="p">))</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">]</span>
+
+	<span class="c1">#Sorting</span>
+	<span class="n">timedNet</span> <span class="o">=</span> <span class="n">sortArcs</span><span class="p">(</span><span class="n">timedNet</span><span class="p">)</span>
+
+	<span class="k">return</span> <span class="n">timedNet</span></div>
+<span class="c1">### END OF HELPER FUNCTION &quot;modifyTimedNet&quot; ###</span>
+
+
+
+<div class="viewcode-block" id="timeElapseTransitions"><a class="viewcode-back" href="../translation.html#timedToData.timeElapseTransitions">[docs]</a><span class="k">def</span> <span class="nf">timeElapseTransitions</span><span class="p">(</span><span class="n">timedNet</span><span class="p">,</span><span class="n">maximal</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	create the transitions for time elapse mode</span>
+
+<span class="sd">	Creates transitions el1, el2, el3, el4</span>
+
+<span class="sd">	for each place p, a transition tf.p.max is created</span>
+
+<span class="sd">	tf.p.max transfers token with integer ages to p.inf</span>
+
+<span class="sd">	for each place p and each k&lt;max transitions tf.p.k and ti.p.k are created</span>
+
+<span class="sd">	tf.p.k changes the value of token with integer ages to high</span>
+
+<span class="sd">	ti.p.k transfers token in p.k with integer ages to next place, p.k+1</span>
+
+<span class="sd">	:param timedNet: a tdpn structure</span>
+<span class="sd">	:type timedNet: tdpn</span>
+<span class="sd">	:param maximal: the maximal contant of timed Net</span>
+<span class="sd">	:type maximal: int</span>
+<span class="sd">	:return: list of transitions and list of places responsible for time elapse</span>
+<span class="sd">	:rtype: tuple[list[tuple[list[str], list[str], dict[str,dict[str,int]], dict[str,dict[str,int]]]], list[strs]]</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="c1">#el0</span>
+	<span class="n">inpMat</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;disc&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el0.disc&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="s2">&quot;time0&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el0.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}}</span>
+	<span class="n">outMat</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;disc&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el0.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span> <span class="s2">&quot;time0&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el0.disc&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}}</span>
+	<span class="n">transitions</span> <span class="o">=</span> <span class="p">[([</span><span class="s2">&quot;disc&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;el0.disc&quot;</span><span class="p">],</span> <span class="n">inpMat</span><span class="p">,</span> <span class="n">outMat</span><span class="p">)]</span>
+
+	<span class="c1">#el1</span>
+	<span class="n">inpMat</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s2">&quot;int&quot;</span><span class="p">:{</span><span class="s2">&quot;el1.newInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldInt&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;el1.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.newHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span> 
+		<span class="s2">&quot;high&quot;</span><span class="p">:{</span><span class="s2">&quot;el1.newInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldHigh&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;el1.newHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;time0&quot;</span><span class="p">:{</span><span class="s2">&quot;el1.newInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.disc&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;el1.oldHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.newHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span> 
+		<span class="s2">&quot;time1&quot;</span><span class="p">:{</span><span class="s2">&quot;el1.newInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.newHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+	<span class="p">}</span>
+	<span class="n">outMat</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s2">&quot;int&quot;</span><span class="p">:{</span><span class="s2">&quot;el1.newInt&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;el1.oldInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.newHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span> 
+		<span class="s2">&quot;high&quot;</span><span class="p">:{</span><span class="s2">&quot;el1.newInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.newHigh&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+		<span class="s2">&quot;time0&quot;</span><span class="p">:{</span><span class="s2">&quot;el1.newInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.newHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span> 
+		<span class="s2">&quot;time1&quot;</span><span class="p">:{</span><span class="s2">&quot;el1.newInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.oldInt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.disc&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;el1.oldHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;el1.newHigh&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+	<span class="p">}</span>
+	<span class="n">transitions</span><span class="o">.</span><span class="n">append</span><span class="p">(([</span><span class="s2">&quot;int&quot;</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span> <span class="s2">&quot;time0&quot;</span><span class="p">,</span> <span class="s2">&quot;time1&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;el1.newInt&quot;</span><span class="p">,</span><span class="s2">&quot;el1.oldInt&quot;</span><span class="p">,</span><span class="s2">&quot;el1.disc&quot;</span><span class="p">,</span><span class="s2">&quot;el1.oldHigh&quot;</span><span class="p">,</span><span class="s2">&quot;el1.newHigh&quot;</span><span class="p">],</span><span class="n">inpMat</span><span class="p">,</span> <span class="n">outMat</span><span class="p">))</span>
+
+	<span class="c1">#el2</span>
+	<span class="n">inpMat</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;disc&quot;</span><span class="p">:{</span><span class="s2">&quot;el2.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span> <span class="s2">&quot;time1&quot;</span><span class="p">:{</span><span class="s2">&quot;el2.disc&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}}</span>
+	<span class="n">outMat</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;disc&quot;</span><span class="p">:{</span><span class="s2">&quot;el2.disc&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="s2">&quot;time1&quot;</span><span class="p">:{</span><span class="s2">&quot;el2.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}}</span>
+	<span class="n">transitions</span><span class="o">.</span><span class="n">append</span><span class="p">(([</span><span class="s2">&quot;disc&quot;</span><span class="p">,</span> <span class="s2">&quot;time1&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;el2.disc&quot;</span><span class="p">],</span> <span class="n">inpMat</span><span class="p">,</span> <span class="n">outMat</span><span class="p">))</span>
+
+	<span class="c1">#el3</span>
+	<span class="n">inpMat</span><span class="o">=</span><span class="p">{</span>
+		<span class="s2">&quot;time1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el3.disc&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;el3.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;time2&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el3.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el3.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;low&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el3.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;el3.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;high&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el3.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.high&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">}</span>
+	<span class="p">}</span>
+	<span class="n">outMat</span><span class="o">=</span><span class="p">{</span>
+		<span class="s2">&quot;time1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el3.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;time2&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el3.disc&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;el3.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el3.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;el3.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;low&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el3.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;high&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;el3.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el3.high&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">}</span>
+	<span class="p">}</span>
+	<span class="n">transitions</span><span class="o">.</span><span class="n">append</span><span class="p">(([</span><span class="s2">&quot;time1&quot;</span><span class="p">,</span> <span class="s2">&quot;time2&quot;</span><span class="p">,</span> <span class="s2">&quot;low&quot;</span><span class="p">,</span> <span class="s2">&quot;low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;el3.disc&quot;</span><span class="p">,</span> <span class="s2">&quot;el3.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;el3.low&quot;</span><span class="p">,</span> <span class="s2">&quot;el3.high&quot;</span><span class="p">],</span> <span class="n">inpMat</span><span class="p">,</span> <span class="n">outMat</span><span class="p">))</span>
+
+	<span class="c1">#el4</span>
+	<span class="n">inpMat</span><span class="o">=</span><span class="p">{</span>
+		<span class="s2">&quot;time2&quot;</span><span class="p">:{</span><span class="s2">&quot;el4.disc&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;el4.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;disc&quot;</span><span class="p">:{</span><span class="s2">&quot;el4.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:{</span><span class="s2">&quot;el4.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;el4.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;low&quot;</span><span class="p">:{</span><span class="s2">&quot;el4.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;high&quot;</span><span class="p">:{</span><span class="s2">&quot;el4.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.high&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">}</span>
+	<span class="p">}</span>
+	<span class="n">outMat</span><span class="o">=</span><span class="p">{</span>
+		<span class="s2">&quot;time2&quot;</span><span class="p">:{</span><span class="s2">&quot;el4.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;disc&quot;</span><span class="p">:{</span><span class="s2">&quot;el4.disc&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;el4.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:{</span><span class="s2">&quot;el4.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;low&quot;</span><span class="p">:{</span><span class="s2">&quot;el4.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;el4.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+		<span class="s2">&quot;high&quot;</span><span class="p">:{</span><span class="s2">&quot;el4.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.low&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;el4.high&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">}</span>
+	<span class="p">}</span>
+	<span class="n">transitions</span><span class="o">.</span><span class="n">append</span><span class="p">(([</span><span class="s2">&quot;time2&quot;</span><span class="p">,</span> <span class="s2">&quot;low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;low&quot;</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span> <span class="s2">&quot;disc&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;el4.disc&quot;</span><span class="p">,</span> <span class="s2">&quot;el4.low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;el4.low&quot;</span><span class="p">,</span> <span class="s2">&quot;el4.high&quot;</span><span class="p">],</span> <span class="n">inpMat</span><span class="p">,</span> <span class="n">outMat</span><span class="p">))</span>
+
+	<span class="c1"># Defining transitions tf.p.k, tf.p.max, ti.p.k for each place</span>
+	<span class="n">newPlaces</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="n">timedNet</span><span class="o">.</span><span class="n">places</span><span class="p">:</span>
+
+		<span class="n">newPlaces</span> <span class="o">=</span> <span class="n">newPlaces</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">place</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">maximal</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span><span class="o">+</span><span class="p">[</span><span class="s2">&quot;inf&quot;</span><span class="p">])))</span>
+		<span class="c1">#tf.p.k</span>
+	
+		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maximal</span><span class="p">):</span>
+			<span class="n">transName</span> <span class="o">=</span> <span class="s2">&quot;tr.&quot;</span><span class="o">+</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+			<span class="n">inpMat</span> <span class="o">=</span> <span class="p">{</span>
+				<span class="s2">&quot;high&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.high&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+				<span class="s2">&quot;time0&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+				<span class="s2">&quot;int&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+				<span class="p">(</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)):{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+			<span class="p">}</span>
+			<span class="n">outMat</span> <span class="o">=</span> <span class="p">{</span>
+				<span class="s2">&quot;high&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.high&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+				<span class="s2">&quot;time0&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+				<span class="s2">&quot;int&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.high&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+				<span class="p">(</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)):{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.high&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+			<span class="p">}</span>
+
+			<span class="n">transitions</span><span class="o">.</span><span class="n">append</span><span class="p">(([</span><span class="s2">&quot;high&quot;</span><span class="p">,</span><span class="s2">&quot;int&quot;</span><span class="p">,</span><span class="s2">&quot;time0&quot;</span><span class="p">,</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)],[</span><span class="n">transName</span><span class="o">+</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.int&quot;</span><span class="p">,</span><span class="s2">&quot;.disc&quot;</span><span class="p">,</span><span class="s2">&quot;.high&quot;</span><span class="p">]],</span><span class="n">inpMat</span><span class="p">,</span><span class="n">outMat</span><span class="p">))</span>
+		<span class="c1">### END OF FOR LOOP</span>
+
+
+		<span class="c1">#tf.p.max</span>
+		<span class="n">transName</span> <span class="o">=</span> <span class="s2">&quot;tf.&quot;</span><span class="o">+</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">maximal</span><span class="p">)</span>
+		<span class="n">inpMat</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s2">&quot;time0&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+			<span class="s2">&quot;int&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+			<span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">maximal</span><span class="p">):{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+			<span class="n">place</span><span class="o">+</span><span class="s2">&quot;.inf&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+		<span class="p">}</span>
+		<span class="n">outMat</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s2">&quot;time0&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+			<span class="s2">&quot;int&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+			<span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">maximal</span><span class="p">):{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+			<span class="n">place</span><span class="o">+</span><span class="s2">&quot;.inf&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+		<span class="p">}</span>
+		<span class="n">transitions</span><span class="o">.</span><span class="n">append</span><span class="p">(([</span><span class="s2">&quot;time0&quot;</span><span class="p">,</span><span class="s2">&quot;int&quot;</span><span class="p">,</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">maximal</span><span class="p">),</span> <span class="n">place</span><span class="o">+</span><span class="s2">&quot;.inf&quot;</span><span class="p">],[</span><span class="n">transName</span><span class="o">+</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.int&quot;</span><span class="p">,</span><span class="s2">&quot;.disc&quot;</span><span class="p">]],</span><span class="n">inpMat</span><span class="p">,</span><span class="n">outMat</span><span class="p">))</span>
+
+
+		<span class="c1">#ti.p.k</span>
+		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maximal</span><span class="p">):</span>
+			<span class="n">transName</span> <span class="o">=</span> <span class="s2">&quot;ti.&quot;</span><span class="o">+</span><span class="n">place</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+			<span class="n">inpMat</span> <span class="o">=</span> <span class="p">{</span>
+				<span class="s2">&quot;time2&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+				<span class="s2">&quot;low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span>	<span class="p">{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+				<span class="s2">&quot;int&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+				<span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="p">{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+				<span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span> <span class="p">{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+			<span class="p">}</span>
+			<span class="n">outMat</span> <span class="o">=</span> <span class="p">{</span>
+				<span class="s2">&quot;time2&quot;</span><span class="p">:{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+				<span class="s2">&quot;low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">:</span>	<span class="p">{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+				<span class="s2">&quot;int&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+				<span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="p">{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+				<span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span> <span class="p">{</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="n">transName</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+			<span class="p">}</span>
+			<span class="n">transitions</span><span class="o">.</span><span class="n">append</span><span class="p">(([</span><span class="s2">&quot;time2&quot;</span><span class="p">,</span><span class="s2">&quot;low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;int&quot;</span><span class="p">,</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">),</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)],[</span><span class="n">transName</span><span class="o">+</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.int&quot;</span><span class="p">,</span><span class="s2">&quot;.disc&quot;</span><span class="p">,</span><span class="s2">&quot;.low&quot;</span><span class="p">]],</span><span class="n">inpMat</span><span class="p">,</span><span class="n">outMat</span><span class="p">))</span>
+		<span class="c1">### END OF FOR LOOP ####</span>
+
+	<span class="k">return</span> <span class="n">transitions</span><span class="p">,</span> <span class="n">newPlaces</span></div>
+<span class="c1">### END OF HELPER FUNCTION ###</span>
+
+
+
+<div class="viewcode-block" id="discreteTransitions"><a class="viewcode-back" href="../translation.html#timedToData.discreteTransitions">[docs]</a><span class="k">def</span> <span class="nf">discreteTransitions</span><span class="p">(</span><span class="n">timedNet</span><span class="p">,</span> <span class="n">maximal</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create the transitions for discrete mode</span>
+
+<span class="sd">	:param timedNet: a tdpn structure</span>
+<span class="sd">	:type timedNet: tdpn</span>
+<span class="sd">	:param maximal: the maximal contant of timed Net</span>
+<span class="sd">	:type maximal: int</span>
+<span class="sd">	:return: list of transitions responsible for discrete transitions</span>
+<span class="sd">	:rtype: list[tuple[list[str], list[str], dict[str,dict[str,int]], dict[str,dict[str,int]]]]</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+		
+	<span class="n">transitions</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">trans</span> <span class="ow">in</span> <span class="n">timedNet</span><span class="o">.</span><span class="n">transitions</span><span class="p">:</span>
+
+		<span class="n">inpMat</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+		<span class="n">outMat</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+		<span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">places</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;int&quot;</span><span class="p">,</span> <span class="s2">&quot;low&quot;</span><span class="p">]</span>
+		<span class="n">buff</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+		<span class="n">temp</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="n">num</span> <span class="o">=</span> <span class="mi">0</span>
+
+		<span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">trans</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+			<span class="k">if</span> <span class="n">arc</span><span class="p">:</span>
+				<span class="n">datum</span> <span class="o">=</span> <span class="kc">None</span>
+				<span class="k">if</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="n">temp</span><span class="p">:</span>
+					<span class="n">temp</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+					<span class="n">buff</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+					<span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+						<span class="n">num</span> <span class="o">+=</span> <span class="mi">1</span>
+						<span class="n">datum</span> <span class="o">=</span> <span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.XD&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">datum</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+					<span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">datum</span><span class="p">)</span>
+
+				<span class="k">elif</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">temp</span> <span class="ow">and</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;singular&quot;</span> <span class="ow">and</span> <span class="n">buff</span><span class="o">==</span><span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+					<span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+						<span class="n">datum</span> <span class="o">=</span> <span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.XD&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">datum</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+					<span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">datum</span><span class="p">)</span>
+
+				<span class="k">elif</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">temp</span> <span class="ow">and</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;singular&quot;</span> <span class="ow">and</span> <span class="n">buff</span><span class="o">!=</span><span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+					<span class="n">buff</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+					<span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+						<span class="n">num</span> <span class="o">+=</span> <span class="mi">1</span> 
+						<span class="n">datum</span> <span class="o">=</span> <span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.XD&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">datum</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+					<span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">datum</span><span class="p">)</span>
+
+				<span class="k">elif</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">temp</span> <span class="ow">and</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;interval&quot;</span> <span class="ow">and</span> <span class="n">buff</span> <span class="o">==</span> <span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+						<span class="n">num</span> <span class="o">+=</span> <span class="mi">1</span>
+						<span class="n">datum</span> <span class="o">=</span> <span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.XD&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">datum</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+					<span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">datum</span><span class="p">)</span>
+
+				<span class="k">elif</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">temp</span> <span class="ow">and</span> <span class="n">arc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;interval&quot;</span> <span class="ow">and</span> <span class="n">buff</span> <span class="o">!=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+					<span class="n">buff</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+					<span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+						<span class="n">num</span> <span class="o">+=</span> <span class="mi">1</span>
+						<span class="n">datum</span> <span class="o">=</span> <span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span><span class="s2">&quot;.XD&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+		
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">datum</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+						<span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">datum</span><span class="p">)</span>
+
+				<span class="k">else</span><span class="p">:</span>
+					<span class="k">pass</span>
+
+				<span class="n">src</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+				<span class="n">places</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+				<span class="n">inpMat</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">src</span><span class="p">,{})[</span><span class="n">datum</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+		<span class="c1">### END of FOR LOOP ###</span>
+		
+		<span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">trans</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+			<span class="k">if</span> <span class="n">arc</span><span class="p">:</span>
+				<span class="n">dst</span> <span class="o">=</span> <span class="kc">None</span>
+				<span class="n">iden</span> <span class="o">=</span> <span class="kc">None</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+						<span class="n">dst</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+						<span class="n">iden</span> <span class="o">=</span> <span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="k">for</span> <span class="n">arc1</span> <span class="ow">in</span> <span class="n">trans</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+							<span class="k">if</span> <span class="n">arc1</span><span class="p">:</span>
+								<span class="k">if</span> <span class="n">arc1</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+									<span class="n">dst</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">arc1</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+									<span class="n">iden</span> <span class="o">=</span> <span class="n">arc</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+					<span class="n">places</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span>
+					<span class="n">outMat</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">dst</span><span class="p">,{})[</span><span class="n">iden</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+
+				<span class="k">except</span><span class="p">:</span>
+					<span class="k">pass</span>
+		<span class="c1">### END OF FOR LOOP ###		</span>
+			
+
+		<span class="n">inpMat</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;disc&quot;</span><span class="p">,{})[</span><span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+		<span class="n">inpMat</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">,{})[</span><span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+		<span class="n">inpMat</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;low&quot;</span><span class="p">,{})[</span><span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+
+		<span class="n">outMat</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;disc&quot;</span><span class="p">,{})[</span><span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.disc&quot;</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+		<span class="n">outMat</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">,{})[</span><span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+		<span class="n">outMat</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;low&quot;</span><span class="p">,{})[</span><span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+
+
+		<span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">permutations</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+		<span class="n">data</span> <span class="o">=</span><span class="p">[[</span><span class="n">item</span> <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">sublist</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sub</span><span class="p">]</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">L</span><span class="p">))]</span> 
+
+		<span class="k">for</span> <span class="n">arrange</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="n">places</span><span class="p">:</span>
+
+				<span class="n">inpMat</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">place</span><span class="p">,{})</span>
+				<span class="n">outMat</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">place</span><span class="p">,{})</span>
+
+				<span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="p">[</span><span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">,</span><span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">]</span><span class="o">+</span><span class="n">arrange</span><span class="p">:</span>
+
+					<span class="n">inpMat</span><span class="p">[</span><span class="n">place</span><span class="p">]</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">datum</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+					<span class="n">outMat</span><span class="p">[</span><span class="n">place</span><span class="p">]</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">datum</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+				<span class="c1">### END OF FOR LOOP ###		</span>
+			<span class="c1">### END OF FOR LOOP ###		</span>
+			<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">places</span><span class="p">,</span> <span class="p">[</span><span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.int&quot;</span><span class="p">,</span><span class="n">trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.low&quot;</span><span class="p">]</span><span class="o">+</span><span class="n">arrange</span><span class="p">,</span> <span class="n">inpMat</span><span class="p">,</span> <span class="n">outMat</span><span class="p">))</span>
+		<span class="c1">### END OF FOR LOOP ###</span>
+
+	<span class="n">transitions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+
+	<span class="k">return</span> <span class="n">transitions</span>	</div>
+<span class="c1">### END OF HELPER FUNCTION ###</span>
+
+
+<div class="viewcode-block" id="translate"><a class="viewcode-back" href="../translation.html#timedToData.translate">[docs]</a><span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="n">timedNet</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	main function to translate a timedNet to a data net</span>
+
+<span class="sd">	:param timedNet: a tdpn structure</span>
+<span class="sd">	:type timedNet: tdpn</span>
+<span class="sd">	:return: a data net equivalent to the timedNet</span>
+<span class="sd">	:rtype: pdn</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">maximal</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="k">for</span> <span class="n">trans</span> <span class="ow">in</span> <span class="n">timedNet</span><span class="o">.</span><span class="n">transitions</span><span class="p">:</span>
+		<span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">trans</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">trans</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+			<span class="k">if</span> <span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+				<span class="n">maximal</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">maximal</span><span class="p">,</span> <span class="n">arc</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+	<span class="c1">#intermediate step 1</span>
+	<span class="n">timedNet</span> <span class="o">=</span> <span class="n">modifyTimedNet</span><span class="p">(</span><span class="n">timedNet</span><span class="p">)</span>
+
+	<span class="c1"># declaring a new data net and finding maximal constant</span>
+	<span class="n">dataNet</span> <span class="o">=</span> <span class="n">pdn</span><span class="p">()</span>
+	
+
+	<span class="c1">#defining places</span>
+	<span class="n">dataNet</span><span class="o">.</span><span class="n">addPlaces</span><span class="p">([</span><span class="s2">&quot;int&quot;</span><span class="p">,</span> <span class="s2">&quot;low&quot;</span><span class="p">,</span> <span class="s2">&quot;low</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span> <span class="s2">&quot;disc&quot;</span><span class="p">,</span> <span class="s2">&quot;time0&quot;</span><span class="p">,</span> <span class="s2">&quot;time1&quot;</span><span class="p">,</span> <span class="s2">&quot;time2&quot;</span><span class="p">,</span> <span class="s2">&quot;success&quot;</span><span class="p">])</span>
+
+	<span class="c1">## DEFINING TRANSITIONS ###</span>
+	<span class="c1"># time elapse</span>
+	<span class="n">temp</span> <span class="o">=</span> <span class="n">timeElapseTransitions</span><span class="p">(</span><span class="n">timedNet</span><span class="p">,</span> <span class="n">maximal</span><span class="p">)</span>
+	<span class="n">dataNet</span><span class="o">.</span><span class="n">addTrans</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+	<span class="n">dataNet</span><span class="o">.</span><span class="n">addPlaces</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+	<span class="c1"># discrete</span>
+	<span class="n">dataNet</span><span class="o">.</span><span class="n">addTrans</span><span class="p">(</span><span class="n">discreteTransitions</span><span class="p">(</span><span class="n">timedNet</span><span class="p">,</span> <span class="n">maximal</span><span class="p">))</span>
+
+	<span class="n">id1</span><span class="p">,</span> <span class="n">id2</span><span class="p">,</span> <span class="n">id3</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span>
+
+
+	<span class="n">initMarking</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+	<span class="n">initMarking</span><span class="p">[</span><span class="s2">&quot;int&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">id1</span><span class="p">]</span>
+	<span class="n">initMarking</span><span class="p">[</span><span class="s2">&quot;disc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">id2</span><span class="p">]</span>
+	<span class="n">initMarking</span><span class="p">[</span><span class="s2">&quot;low&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">id3</span><span class="p">]</span>
+	<span class="n">initMarking</span><span class="p">[</span><span class="s2">&quot;high&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">id3</span><span class="p">]</span>
+
+	<span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="n">timedNet</span><span class="o">.</span><span class="n">initMarking</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+		<span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">timedNet</span><span class="o">.</span><span class="n">initMarking</span><span class="p">[</span><span class="n">place</span><span class="p">]:</span>
+			<span class="k">if</span> <span class="n">token</span><span class="o">&lt;=</span><span class="n">maximal</span><span class="p">:</span>
+				<span class="n">initMarking</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">token</span><span class="p">),</span> <span class="p">[])</span>
+				<span class="n">initMarking</span><span class="p">[</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">token</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">id1</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">initMarking</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.inf&quot;</span><span class="p">,</span> <span class="p">[])</span>
+				<span class="n">initMarking</span><span class="p">[</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.inf&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">id1</span><span class="p">)</span>
+
+	<span class="n">tempPlaces</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">inpMat</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+	<span class="n">outMat</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+	<span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="n">dataNet</span><span class="o">.</span><span class="n">places</span><span class="p">:</span>
+		<span class="n">inpMat</span><span class="p">[</span><span class="n">place</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;int&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+		<span class="n">outMat</span><span class="p">[</span><span class="n">place</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;int&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+	<span class="c1">### END OF FOR LOOP ###</span>
+
+	<span class="n">outMat</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">][</span><span class="s2">&quot;int&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+	<span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="n">timedNet</span><span class="o">.</span><span class="n">finalMarking</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+		<span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">timedNet</span><span class="o">.</span><span class="n">finalMarking</span><span class="p">[</span><span class="n">place</span><span class="p">]:</span>
+			<span class="k">if</span> <span class="n">token</span><span class="o">&lt;=</span><span class="n">maximal</span><span class="p">:</span>
+				<span class="n">tempPlaces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">token</span><span class="p">))</span>
+				<span class="n">inpMat</span><span class="p">[</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">token</span><span class="p">)][</span><span class="s2">&quot;int&quot;</span><span class="p">]</span><span class="o">+=</span><span class="mi">1</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">tempPlaces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">places</span><span class="o">+</span><span class="s2">&quot;.inf&quot;</span><span class="p">)</span>
+				<span class="n">inpMat</span><span class="p">[</span><span class="n">place</span><span class="o">+</span><span class="s2">&quot;.inf&quot;</span><span class="p">][</span><span class="s2">&quot;int&quot;</span><span class="p">]</span><span class="o">+=</span><span class="mi">1</span>
+		<span class="c1">### END OF FOR LOOP ###</span>
+	<span class="c1">### END OF FOR LOOP ###</span>
+
+	<span class="n">dataNet</span><span class="o">.</span><span class="n">addTrans</span><span class="p">([(</span><span class="n">tempPlaces</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;int&quot;</span><span class="p">],</span> <span class="n">inpMat</span><span class="p">,</span> <span class="n">outMat</span><span class="p">)])</span>
+	<span class="n">dataNet</span><span class="o">.</span><span class="n">addInitMarking</span><span class="p">(</span><span class="n">initMarking</span><span class="p">)</span>
+	<span class="n">dataNet</span><span class="o">.</span><span class="n">addFinalMarking</span><span class="p">({</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">id1</span><span class="p">]})</span>
+
+	<span class="k">return</span> <span class="n">dataNet</span></div>
+<span class="c1">#### END OF FUNCTION &quot;translate&quot; ###</span>
+
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">):</span>
+	<span class="n">timedNet</span> <span class="o">=</span> <span class="n">tdpn</span><span class="p">()</span>
+	<span class="n">timedNet</span><span class="o">.</span><span class="n">places</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">,</span><span class="s2">&quot;q&quot;</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">,</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+	<span class="n">timedNet</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">]</span>
+	<span class="n">timedNet</span><span class="o">.</span><span class="n">transitions</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;tr1&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="s2">&quot;open&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="kc">None</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;q&quot;</span><span class="p">,</span> <span class="s2">&quot;singular&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;X&quot;</span><span class="p">)],</span> <span class="p">[(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;X&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;open&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="kc">None</span><span class="p">)])]</span>
+	<span class="n">timedNet</span><span class="o">.</span><span class="n">initMarking</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;p&quot;</span><span class="p">:[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;q&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]}</span>
+	<span class="n">timedNet</span><span class="o">.</span><span class="n">finalMarking</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;r&quot;</span><span class="p">:[</span><span class="mi">2</span><span class="p">]}</span>
+
+	<span class="n">t2</span> <span class="o">=</span> <span class="n">tdpn</span><span class="p">()</span>
+	<span class="n">t2</span><span class="o">.</span><span class="n">readFromFile</span><span class="p">(</span><span class="s2">&quot;test1.tpn&quot;</span><span class="p">)</span>
+	<span class="n">t2</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">]</span>
+	
+	<span class="n">d</span> <span class="o">=</span> <span class="n">translate</span><span class="p">(</span><span class="n">t2</span><span class="p">)</span>
+	<span class="nb">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+	<span class="n">main</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Rajdeep Yadav.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

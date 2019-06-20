@@ -1,0 +1,8 @@
+Auto Documentation
+===================
+
+.. automodule:: nets
+	:members: 
+
+.. automodule:: timedToData
+	:members: 

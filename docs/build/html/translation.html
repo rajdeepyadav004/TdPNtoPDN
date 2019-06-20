@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Translation &#8212; Petri Net Translation 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Classes" href="classes.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-timedToData">
+<span id="translation"></span><h1>Translation<a class="headerlink" href="#module-timedToData" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="timedToData.discreteTransitions">
+<code class="sig-prename descclassname">timedToData.</code><code class="sig-name descname">discreteTransitions</code><span class="sig-paren">(</span><em class="sig-param">timedNet</em>, <em class="sig-param">maximal</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timedToData.html#discreteTransitions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timedToData.discreteTransitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the transitions for discrete mode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timedNet</strong> (<a class="reference internal" href="classes.html#nets.tdpn" title="nets.tdpn"><em>tdpn</em></a>) – a tdpn structure</p></li>
+<li><p><strong>maximal</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the maximal contant of timed Net</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of transitions responsible for discrete transitions</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>,<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>,<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)">int</a>]], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>,<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>,<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)">int</a>]]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="timedToData.divide">
+<code class="sig-prename descclassname">timedToData.</code><code class="sig-name descname">divide</code><span class="sig-paren">(</span><em class="sig-param">trans</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timedToData.html#divide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timedToData.divide" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper function to help create multiple transitions with one transition</p>
+<p>each arc in the result is either singular or open interval of length 1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>trans</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><em>typing.Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>,</em><em>double</em><em>]</em><em>]</em><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>]</em><em>]</em><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>[</em><em>typing.Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>,</em><em>double</em><em>]</em><em>]</em><em>,</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>]</em><em>]</em><em>]</em>) – a timed transtion</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of arcs</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>,<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>,<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>[typing.Union[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)">int</a>,double]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="timedToData.modifyTimedNet">
+<code class="sig-prename descclassname">timedToData.</code><code class="sig-name descname">modifyTimedNet</code><span class="sig-paren">(</span><em class="sig-param">timedNet</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timedToData.html#modifyTimedNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timedToData.modifyTimedNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper function to change the timedNet and make it suitable for translation</p>
+<p>It will create multiple transitions from one transition by dividing each arc
+into separate arcs which are either singular, or represent an open interval
+of length 1.</p>
+<p>Also, the arcs in each transition will be sorted</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timedNet</strong> (<a class="reference internal" href="classes.html#nets.tdpn" title="nets.tdpn"><em>tdpn</em></a>) – a tdpn structure</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a modified timedNet</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="classes.html#nets.tdpn" title="nets.tdpn">tdpn</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="timedToData.sortArcs">
+<code class="sig-prename descclassname">timedToData.</code><code class="sig-name descname">sortArcs</code><span class="sig-paren">(</span><em class="sig-param">timedNet</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timedToData.html#sortArcs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timedToData.sortArcs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to sort the arcs in every transition on the basis of their intervals</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timedNet</strong> (<a class="reference internal" href="classes.html#nets.tdpn" title="nets.tdpn"><em>tdpn</em></a>) – a tdpn structure</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a tdpn with sorted arcs in all transitions</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="classes.html#nets.tdpn" title="nets.tdpn">tdpn</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="timedToData.timeElapseTransitions">
+<code class="sig-prename descclassname">timedToData.</code><code class="sig-name descname">timeElapseTransitions</code><span class="sig-paren">(</span><em class="sig-param">timedNet</em>, <em class="sig-param">maximal</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timedToData.html#timeElapseTransitions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timedToData.timeElapseTransitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>create the transitions for time elapse mode</p>
+<p>Creates transitions el1, el2, el3, el4</p>
+<p>for each place p, a transition tf.p.max is created</p>
+<p>tf.p.max transfers token with integer ages to p.inf</p>
+<p>for each place p and each k&lt;max transitions tf.p.k and ti.p.k are created</p>
+<p>tf.p.k changes the value of token with integer ages to high</p>
+<p>ti.p.k transfers token in p.k with integer ages to next place, p.k+1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timedNet</strong> (<a class="reference internal" href="classes.html#nets.tdpn" title="nets.tdpn"><em>tdpn</em></a>) – a tdpn structure</p></li>
+<li><p><strong>maximal</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the maximal contant of timed Net</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of transitions and list of places responsible for time elapse</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>,<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>,<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)">int</a>]], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>,<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>,<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)">int</a>]]]], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>[strs]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="timedToData.translate">
+<code class="sig-prename descclassname">timedToData.</code><code class="sig-name descname">translate</code><span class="sig-paren">(</span><em class="sig-param">timedNet</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timedToData.html#translate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timedToData.translate" title="Permalink to this definition">¶</a></dt>
+<dd><p>main function to translate a timedNet to a data net</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timedNet</strong> (<a class="reference internal" href="classes.html#nets.tdpn" title="nets.tdpn"><em>tdpn</em></a>) – a tdpn structure</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a data net equivalent to the timedNet</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="classes.html#nets.pdn" title="nets.pdn">pdn</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="classes.html" title="previous chapter">Classes</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Rajdeep Yadav.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/translation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
